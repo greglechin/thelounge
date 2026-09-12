@@ -457,4 +457,49 @@ export const UploadProviders: UploadProvider[] = [
 			return url;
 		},
 	},
+	{
+		id: "zipline",
+		displayName: "Zipline",
+		requiresURL: true,
+		requiresToken: true,
+		supportNote: "Supported files: Images, Videos, Audio, and Text",
+		async upload(file: File, ttl: string, url_token?: string) {
+			const [encodedRequestURL, auth] = url_token!.split("_|_");
+			const requestURL = atob(encodedRequestURL)
+
+			if (!requestURL.startsWith("http")) {
+				throw new Error("Invalid Upload URL");
+			}
+
+			if (!auth || (auth.startsWith('_') && auth.endsWith('_'))) {
+				throw new Error("Invalid Upload Token");
+			}
+
+			const payload = new FormData();
+
+			payload.append("file", file);
+
+			const response = await fetch(requestURL, {
+				method: "POST",
+				headers: {
+					authorization: auth,
+				},
+				body: payload,
+			});
+
+			const json = await response.json();
+
+			if (!response.ok) {
+				throw new Error(json?.error ?? "Unknown Error");
+			}
+
+			const url = <string>json.files?.[0] ?? "";
+
+			if (!url.startsWith("http")) {
+				throw new Error("Unknown Error");
+			}
+
+			return url;
+		},
+	},
 ];
