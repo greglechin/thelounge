@@ -493,7 +493,12 @@ export const UploadProviders: UploadProvider[] = [
 				throw new Error(json?.error ?? "Unknown Error");
 			}
 
-			const url = <string>json.files?.[0] ?? "";
+			// Newer Zipline versions return files as an array of objects
+			// ({id, name, type, url}); older ones return plain URL strings.
+			const entry = json.files?.[0];
+
+			const url =
+				typeof entry === "string" ? entry : (entry?.url ?? "");
 
 			if (!url.startsWith("http")) {
 				throw new Error("Unknown Error");
